@@ -24,7 +24,7 @@ from __future__ import annotations
 import calendar
 import re
 
-from ..db import Fare
+from ..db import Fare, today_sofia
 from ..fetch import BlockedError, FetchError, Strategy
 from . import MonthFares, RouteNotServed
 
@@ -41,8 +41,8 @@ HEADERS = {
     "Origin": "https://www.wizzair.com",
     "Referer": HOMEPAGE,
 }
-NOT_SERVED_CODES = {"NoFlightsFound", "InvalidStation", "StationNotFound", "RouteNotFound",
-                    "InvalidRoute", "NoRouteFound"}
+NOT_SERVED_CODES = {"InvalidMarket", "NoFlightsFound", "InvalidStation", "StationNotFound",
+                    "RouteNotFound", "InvalidRoute", "NoRouteFound"}
 
 
 def _hhmm(value: str | None) -> str | None:
@@ -149,8 +149,11 @@ class WizzAir:
     # ---- цени -----------------------------------------------------------
 
     def scan_month(self, origin: str, destination: str, year: int, month: int) -> MonthFares:
-        first = f"{year}-{month:02d}-01"
+        # API-то отказва период, започващ в миналото (InvalidFromDate)
+        first = max(f"{year}-{month:02d}-01", today_sofia().isoformat())
         last = f"{year}-{month:02d}-{calendar.monthrange(year, month)[1]:02d}"
+        if first > last:
+            return MonthFares()
         body = {
             "flightList": [
                 {"departureStation": origin, "arrivalStation": destination, "from": first, "to": last},

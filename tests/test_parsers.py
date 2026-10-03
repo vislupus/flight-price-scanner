@@ -27,3 +27,35 @@ def test_wizzair_parser(rates):
     inb = parse_flights(data["returnFlights"], rates)
     assert inb["2026-11-09"].currency == "GBP"
     assert inb["2026-11-09"].price_eur == round(34.99 / 0.8, 2)
+
+
+def test_wizzair_month_request(rates, monkeypatch):
+    """Периодът започва от днес, а InvalidMarket значи „не лети по маршрута“."""
+    import pytest
+    from datetime import date
+    from scanner.airlines import RouteNotServed
+    from scanner.airlines import wizzair as wz
+
+    monkeypatch.setattr(wz, "today_sofia", lambda: date(2026, 10, 15))
+    calls = []
+
+    class FakeFetcher:
+        strategies = []
+
+        def post(self, url, body, **kw):
+            calls.append(body)
+            class R:
+                status = 400
+                text = "{}"
+                def json(self):
+                    return {"validationCodes": ["InvalidMarket"]}
+            return R()
+
+    w = wz.WizzAir(FakeFetcher(), rates)
+    w.version = "1.0.0"
+    with pytest.raises(RouteNotServed):
+        w.scan_month("SOF", "DUB", 2026, 10)
+    assert calls[0]["flightList"][0]["from"] == "2026-10-15"
+    assert calls[0]["flightList"][0]["to"] == "2026-10-31"
+    assert w.scan_month("SOF", "DUB", 2026, 9).outbound == {}   # изцяло в миналото – без заявка
+    assert len(calls) == 1
