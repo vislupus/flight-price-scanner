@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Цени на полети</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M3 18l9 3 6-6 9 10-3 3-10-9-6 6-3-9z' fill='%232a78d6'/><path d='M30 2L14 14l6 6z' fill='%232a78d6'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f8;
+    --surface: #ffffff;
+    --ink: #19202c;
+    --muted: #677285;
+    --line: #dfe3ea;
+    --blue: #2a78d6;
+    --blue-soft: rgba(42, 120, 214, .14);
+    --orange: #eb6834;
+    --good: #12805a;
+    --good-soft: #e3f4ec;
+    --warn: #b4461b;
+    --warn-soft: #fbe9e1;
+    --wait: #4a3aa7;
+    --wait-soft: #ebe8fa;
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #121720;
+      --surface: #1a212d;
+      --ink: #e7ebf2;
+      --muted: #939db0;
+      --line: #2c3544;
+      --blue: #3987e5;
+      --blue-soft: rgba(57, 135, 229, .2);
+      --orange: #d95926;
+      --good: #4cc995;
+      --good-soft: rgba(76, 201, 149, .14);
+      --warn: #f08a5d;
+      --warn-soft: rgba(240, 138, 93, .14);
+      --wait: #9085e9;
+      --wait-soft: rgba(144, 133, 233, .16);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 15px/1.5 "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  a { color: var(--blue); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  h1, h2, h3 { margin: 0; }
+
+  /* ---------- шапка ---------- */
+  .top {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 14px 28px; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .brand svg { width: 24px; height: 24px; }
+  .updated { color: var(--muted); font-size: 14px; }
+  .top .spacer { flex: 1; }
+  .ctl { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .ctl select {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 10px;
+    padding: 6px 10px; color: var(--ink);
+  }
+
+  .issues {
+    margin: 0; padding: 10px 28px; font-size: 14px;
+    background: color-mix(in srgb, var(--warn) 10%, var(--paper));
+    border-bottom: 1px solid var(--line);
+  }
+  .issues summary { cursor: pointer; color: var(--warn); font-weight: 600; }
+  .issues ul { margin: 8px 0 2px; padding-left: 20px; }
+
+  /* ---------- подредба ---------- */
+  .layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: calc(100vh - 60px); }
+  .rail {
+    border-right: 1px solid var(--line); padding: 18px 14px 18px 20px;
+    position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto;
+  }
+  .search { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+  .group { margin-top: 14px; }
+  .item {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; width: 100%; text-align: left;
+    border: 0; background: none; padding: 9px 10px; border-radius: 10px; cursor: pointer;
+  }
+  .item:hover { background: var(--surface); }
+  .item[aria-current="true"] { background: var(--surface); box-shadow: inset 3px 0 0 var(--blue); }
+  .item .nm { font-size: 14px; font-weight: 500; }
+  .item .pr { font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .item .st { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+  .item .st.hit { color: var(--good); font-weight: 600; }
+  .rail-foot { margin: 18px 8px 4px; font-size: 13px; color: var(--muted); }
+  .rail-foot label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+
+  /* ---------- детайл ---------- */
+  .detail { padding: 24px 32px 48px; min-width: 0; }
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: start; }
+  .cat { color: var(--muted); font-size: 14px; }
+  .title { font-size: clamp(22px, 2.4vw, 28px); line-height: 1.2; font-weight: 700; margin: 4px 0 6px; }
+  .sub { font-size: 14px; color: var(--muted); }
+  .tag { text-align: right; }
+  .tag .amount { display: inline-flex; align-items: flex-start; line-height: .9; font-weight: 800; letter-spacing: -.02em; }
+  .tag .whole { font-size: clamp(50px, 6.5vw, 76px); }
+  .tag .cents { font-size: clamp(20px, 2.6vw, 30px); margin: .18em 0 0 .08em; border-bottom: 3px solid currentColor; line-height: 1; }
+  .tag .cur { font-size: clamp(20px, 2.6vw, 30px); margin: .18em 0 0 .18em; font-weight: 600; }
+  .tag.hit .amount { color: var(--good); }
+  .tag .note { margin-top: 6px; font-size: 14px; color: var(--muted); }
+  .tag .note b { color: var(--ink); font-weight: 600; }
+  .tag.hit .note b { color: var(--good); }
+
+  .verdict { margin-top: 18px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: start;
+             padding: 14px 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+  .chip { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .chip.buy { background: var(--good-soft); color: var(--good); }
+  .chip.good { background: var(--blue-soft); color: var(--blue); }
+  .chip.hold { background: var(--line); color: var(--ink); }
+  .chip.wait { background: var(--wait-soft); color: var(--wait); }
+  .verdict .why { font-size: 14px; color: var(--muted); }
+  .verdict .why b { color: var(--ink); font-weight: 600; }
+  .verdict ul { margin: 4px 0 0; padding-left: 18px; }
+
+  section.block { margin-top: 30px; }
+  section.block h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  section.block .lead { font-size: 14px; color: var(--muted); margin: 0 0 12px; max-width: 80ch; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .chart { width: 100%; height: 300px; }
+  .chart.tall { height: 340px; }
+
+  table.trips { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.trips th, table.trips td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.trips th { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  table.trips td.num, table.trips th.num { text-align: right; white-space: nowrap; }
+  table.trips tr.row { cursor: pointer; }
+  table.trips tr.row:hover { background: var(--blue-soft); }
+  table.trips tr.row[aria-selected="true"] { background: var(--blue-soft); box-shadow: inset 3px 0 0 var(--blue); }
+  table.trips .leg { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  table.trips .total { font-weight: 700; }
+  .down { color: var(--good); }
+  .up { color: var(--warn); }
+  .best { color: var(--good); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+
+  table.lead { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.lead th, table.lead td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+  table.lead th:first-child, table.lead td:first-child { text-align: left; }
+  table.lead th { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  table.lead tr.now { background: var(--blue-soft); font-weight: 600; }
+
+  .seasons { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-top: 10px; }
+  .season { text-align: center; font-size: 12px; padding: 6px 2px; border-radius: 8px; background: var(--line); }
+  .season.cheap { background: var(--good-soft); color: var(--good); font-weight: 600; }
+  .season.expensive { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); padding: 10px 14px 0; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+  .wd { display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+  .wd span { padding: 3px 9px; border-radius: 999px; background: var(--line); }
+  .wd span.lo { background: var(--good-soft); color: var(--good); font-weight: 600; }
+
+  .empty { max-width: 560px; margin: 12vh auto; text-align: center; padding: 0 20px; }
+  .empty h1 { font-size: 22px; margin: 0 0 8px; }
+  .empty p { color: var(--muted); }
+  .no-data { padding: 40px 20px; text-align: center; color: var(--muted); }
+  .note { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .rail { position: static; max-height: 40vh; border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 16px; }
+    .detail { padding: 20px 16px 32px; }
+    .head { grid-template-columns: 1fr; }
+    .tag { text-align: left; }
+    .top { padding: 12px 16px; }
+    .seasons { grid-template-columns: repeat(6, 1fr); }
+    .chart { height: 260px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 18l9 3 6-6 9 10-3 3-10-9-6 6-3-9z" fill="var(--blue)"/><path d="M30 2L14 14l6 6z" fill="var(--blue)"/></svg>
+    Цени на полети
+  </div>
+  <span class="updated" id="updated"></span>
+  <span class="spacer"></span>
+  <label class="ctl">Дни <select id="pattern"></select></label>
+  <label class="ctl">Нощувки <select id="nights"></select></label>
+</header>
+
+<details class="issues" id="issues" hidden></details>
+
+<main id="app">
+  <div class="empty" id="loading"><p>Зареждам данните…</p></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const DATA_URL = "data/summary.json";
+  const DAY = 86400000;
+  const WD = ["пн", "вт", "ср", "чт", "пт", "сб", "нд"];
+  const MONTHS = ["яну", "фев", "мар", "апр", "май", "юни", "юли", "авг", "сеп", "окт", "ное", "дек"];
+  const PATTERNS = {
+    long_weekend: { out: [3, 4], back: [0, 1] },
+    workweek: { out: [0, 1, 2, 3, 4], back: [0, 1, 2, 3, 4] },
+    any: { out: [0, 1, 2, 3, 4, 5, 6], back: [0, 1, 2, 3, 4, 5, 6] },
+  };
+  const VERDICT = { buy: "Купи сега", good: "Добра цена", hold: "Нормална цена", wait: "Изчакай" };
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const eur = new Intl.NumberFormat("bg-BG", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
+  const num2 = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const dateTimeFmt = new Intl.DateTimeFormat("bg-BG", { timeZone: "Europe/Sofia", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtEur = (v) => (v == null ? "—" : eur.format(v));
+  const fmtEur0 = (v) => (v == null ? "—" : `${Math.round(v)} €`);
+  const pct = (v) => `${Math.round(v * 100)} %`;
+  const parseDay = (iso) => new Date(`${iso}T00:00:00`);
+  const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const addDays = (iso, n) => { const d = parseDay(iso); d.setDate(d.getDate() + n); return isoDay(d); };
+  const weekday = (iso) => (parseDay(iso).getDay() + 6) % 7;      // понеделник = 0
+  const fmtDay = (iso) => `${WD[weekday(iso)]} ${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
+  const fmtDayY = (iso) => `${fmtDay(iso)}.${iso.slice(0, 4)}`;
+  const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / DAY);
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const state = {
+    data: null, routes: [], byKey: new Map(), selected: null, selectedTrip: null,
+    pattern: "long_weekend", nights: [3, 4], query: "", showInactive: false, charts: {},
+  };
+
+  // ------------------------------------------------------------------
+  //  Логика (повторена от scanner/trips.py и scanner/insights.py)
+  // ------------------------------------------------------------------
+  function routeData(r) {
+    const dirs = { out: {}, in: {} };
+    for (const leg of r.legs) {
+      const dir = leg.origin === r.origin ? "out" : "in";
+      const d = dirs[dir];
+      for (const [date, price, dep, orig, cur] of leg.fares) {
+        if (price == null) continue;
+        if (!d[date]) d[date] = { date, price, airline: leg.airline, dep, orig, cur, hist: [] };
+        else if (price < d[date].price) Object.assign(d[date], { price, airline: leg.airline, dep, orig, cur });
+      }
+      for (const [date, iv] of Object.entries(leg.history || {})) {
+        if (!d[date]) d[date] = { date, price: null, airline: null, hist: [] };
+        d[date].hist.push(iv);
+      }
+    }
+    const asOf = r.legs.map((l) => l.as_of).filter(Boolean).sort().pop() || null;
+    return { out: dirs.out, in: dirs.in, asOf };
+  }
+
+  function buildTrips(out, inn, nights, pattern, today) {
+    const p = PATTERNS[pattern];
+    const trips = [];
+    for (const o of Object.values(out)) {
+      if (o.price == null || o.date < today) continue;
+      if (!p.out.includes(weekday(o.date))) continue;
+      for (const n of nights) {
+        const back = inn[addDays(o.date, n)];
+        if (!back || back.price == null || !p.back.includes(weekday(back.date))) continue;
+        trips.push({ out: o, back, nights: n, total: Math.round((o.price + back.price) * 100) / 100 });
+      }
+    }
+    trips.sort((a, b) => a.total - b.total || (a.out.date < b.out.date ? -1 : 1) || a.nights - b.nights);
+    return trips;
+  }
+
+  const priceOn = (iv, day) => { for (const [f, l, p] of iv) if (f <= day && day <= l) return p; return null; };
+  function priceOnSets(sets, day) {
+    let best = null;
+    for (const s of sets) { const p = priceOn(s, day); if (p != null && (best == null || p < best)) best = p; }
+    return best;
+  }
+  function pairSeries(outSets, inSets) {
+    const days = new Set();
+    for (const g of [outSets, inSets]) for (const s of g) for (const [f, l] of s) { days.add(f); days.add(l); }
+    const series = [];
+    for (const day of [...days].sort()) {
+      const a = priceOnSets(outSets, day), b = priceOnSets(inSets, day);
+      if (a == null || b == null) continue;
+      const t = Math.round((a + b) * 100) / 100;
+      if (!series.length || series[series.length - 1][1] !== t) series.push([day, t]);
+    }
+    return series;
+  }
+  function totalOn(outSets, inSets, day) {
+    const lookup = (sets) => { for (let k = 0; k < 4; k++) { const p = priceOnSets(sets, addDays(day, -k)); if (p != null) return p; } return null; };
+    const a = lookup(outSets), b = lookup(inSets);
+    return a == null || b == null ? null : Math.round((a + b) * 100) / 100;
+  }
+  function pairContext(outSets, inSets, today) {
+    const series = pairSeries(outSets, inSets);
+    const ctx = { histMin: null, histMinOn: null, ago7: null, ago30: null, firstSeen: null, daysTracked: 0, series };
+    if (!series.length) return ctx;
+    ctx.firstSeen = series[0][0];
+    for (const [d, t] of series) if (ctx.histMin == null || t < ctx.histMin) { ctx.histMin = t; ctx.histMinOn = d; }
+    ctx.daysTracked = Math.max(0, daysBetween(ctx.firstSeen, today));
+    ctx.ago7 = totalOn(outSets, inSets, addDays(today, -7));
+    ctx.ago30 = totalOn(outSets, inSets, addDays(today, -30));
+    return ctx;
+  }
+
+  function verdict(total, { target, ctx, percentile, lead, leadStats, levels }) {
+    const reasons = [];
+    let score = 0;
+    if (target != null && total <= target) { score += 2; reasons.push(`под целта ти от ${Math.round(target)} €`); }
+    if (levels) {
+      if (total <= levels.low) { score += 1; reasons.push(`сред най-ниските цени в историята на маршрута (под ${Math.round(levels.low)} €)`); }
+      else if (total >= levels.high) { score -= 1; reasons.push(`над обичайното за маршрута (типично ${Math.round(levels.typical)} €)`); }
+    }
+    if (ctx.histMin != null && ctx.daysTracked >= 7) {
+      if (total <= ctx.histMin + 0.01) { score += 1; reasons.push(`най-ниската цена за тези дати, откакто се следят (${ctx.daysTracked} дни)`); }
+      else if (total > ctx.histMin * 1.15) { score -= 2; reasons.push(`за тези дати е било ${Math.round(ctx.histMin)} € (${ctx.histMinOn})`); }
+      else reasons.push(`близо до най-ниската за тези дати (${Math.round(ctx.histMin)} €)`);
+    }
+    if (ctx.ago7 != null && ctx.ago7 !== total) {
+      const d = total - ctx.ago7;
+      if (d < 0) reasons.push(`поевтиня с ${Math.round(-d)} € за седмица`);
+      else { if (d > total * 0.1) score -= 1; reasons.push(`поскъпна с ${Math.round(d)} € за седмица`); }
+    }
+    if (percentile != null) {
+      if (percentile <= 0.2) { score += 1; reasons.push("сред най-евтините дати по този маршрут"); }
+      else if (percentile >= 0.6) { score -= 1; reasons.push("има по-евтини дати по този маршрут"); }
+    }
+    if (leadStats && leadStats.n >= 15) {
+      const pd = leadStats.p_drop10, med = leadStats.median_drop;
+      if (pd >= 0.6 && med >= 0.15 && lead > 21) { score -= 1; reasons.push(`при такава цена ${lead} дни преди полета е падала още в ${pct(pd)} от случаите (типично с ${pct(med)})`); }
+      else if (pd <= 0.35) { score += 1; reasons.push(`при такава цена ${lead} дни преди полета рядко пада още (${pct(pd)})`); }
+      else reasons.push(`${pct(pd)} шанс да падне още ${lead} дни преди полета`);
+    } else if (lead <= 14) { score += 1; reasons.push("остават малко дни – рядко поевтинява в последния момент"); }
+    const code = score >= 2 ? "buy" : score === 1 ? "good" : score <= -2 ? "wait" : "hold";
+    return { code, label: VERDICT[code], reasons };
+  }
+
+  function leadStatsFor(ins, trip, lead) {
+    const b = (ins.lead_time?.out || []).find((r) => r.lo <= lead && lead <= r.hi);
+    if (!b) return null;
+    const lv = ins.levels || {};
+    const cheap = lv.out && lv.in && trip.out.price <= lv.out.typical && trip.back.price <= lv.in.typical;
+    return cheap ? (b.cheap || b) : b;
+  }
+
+  function percentileOf(v, values) {
+    if (!values.length) return null;
+    let below = 0; for (const x of values) if (x < v) below++;
+    return below / values.length;
+  }
+
+  /* Пълна оценка на едно пътуване */
+  function assess(r, rd, trip, allTotals, today) {
+    const outSets = (rd.out[trip.out.date]?.hist || []), inSets = (rd.in[trip.back.date]?.hist || []);
+    const ctx = pairContext(outSets, inSets, today);
+    const lead = daysBetween(today, trip.out.date);
+    const v = verdict(trip.total, {
+      target: r.target_price, ctx, percentile: percentileOf(trip.total, allTotals), lead,
+      leadStats: leadStatsFor(r.insights, trip, lead), levels: r.insights.levels?.total,
+    });
+    return { ctx, lead, verdict: v };
+  }
+
+  // ------------------------------------------------------------------
+  //  Зареждане
+  // ------------------------------------------------------------------
+  async function boot() {
+    let data;
+    try {
+      const res = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status);
+      data = await res.json();
+    } catch (e) {
+      return showError("Не намерих data/summary.json. Пусни `python -m scanner export` и отвори страницата през локален сървър (python -m http.server в папка docs).");
+    }
+    state.data = data;
+    state.routes = data.routes.map((r) => ({ ...r, rd: routeData(r) }));
+    state.byKey = new Map(state.routes.map((r) => [r.key, r]));
+    state.nights = data.settings.nights || [3, 4];
+    state.pattern = (data.settings.patterns || ["long_weekend"])[0];
+
+    const ls = data.last_scan;
+    $("#updated").textContent = ls?.finished_at ? `обновено ${dateTimeFmt.format(new Date(ls.finished_at))}` : "";
+    const issues = $("#issues");
+    const errs = ls?.errors || [];
+    if (errs.length) {
+      issues.hidden = false;
+      issues.innerHTML = `<summary>${errs.length} ${errs.length === 1 ? "проверка се провали" : "проверки се провалиха"} при последното сканиране</summary>
+        <ul>${errs.map((e) => `<li>${esc(data.airline_names[e.airline] || e.airline)} ${esc(e.leg)}: ${esc(e.error)}</li>`).join("")}</ul>`;
+    }
+    setupControls();
+    renderShell();
+    const fromHash = decodeURIComponent(location.hash.slice(1));
+    if (state.byKey.get(fromHash) && !state.byKey.get(fromHash).active) state.showInactive = true;
+    renderRail();
+    const first = state.byKey.has(fromHash) ? fromHash : visibleRoutes()[0]?.key;
+    if (first) select(first, false);
+  }
+
+  function setupControls() {
+    const ps = $("#pattern");
+    ps.innerHTML = Object.entries(state.data.pattern_labels)
+      .map(([k, v]) => `<option value="${k}">${esc(v.label)} (${esc(v.hint)})</option>`).join("");
+    ps.value = state.pattern;
+    ps.addEventListener("change", () => { state.pattern = ps.value; rerender(); });
+
+    const ns = $("#nights");
+    const def = state.nights.join("-");
+    const opts = [[def, state.nights.length > 1 ? `${state.nights[0]}–${state.nights[state.nights.length - 1]}` : String(state.nights[0])]];
+    for (let n = 2; n <= 7; n++) if (String(n) !== def) opts.push([String(n), String(n)]);
+    ns.innerHTML = opts.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+    ns.value = def;
+    ns.addEventListener("change", () => { state.nights = ns.value.split("-").map(Number); rerender(); });
+  }
+
+  function rerender() {
+    state.selectedTrip = null;
+    renderRail();
+    if (state.selected) renderDetail(state.byKey.get(state.selected));
+  }
+
+  // ------------------------------------------------------------------
+  //  Списък с маршрути
+  // ------------------------------------------------------------------
+  function bestTrip(r) {
+    const trips = buildTrips(r.rd.out, r.rd.in, state.nights, state.pattern, state.data.today);
+    return trips[0] || null;
+  }
+
+  function visibleRoutes() {
+    const q = state.query.trim().toLowerCase();
+    return state.routes
+      .filter((r) => r.active || state.showInactive)
+      .filter((r) => !q || r.name.toLowerCase().includes(q) || r.key.toLowerCase().includes(q))
+      .sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1) || a.name.localeCompare(b.name, "bg"));
+  }
+
+  function renderShell() {
+    $("#app").innerHTML = `
+      <div class="layout">
+        <nav class="rail" aria-label="Маршрути">
+          <input class="search" id="search" type="search" placeholder="Търси дестинация" aria-label="Търси дестинация">
+          <div id="groups"></div>
+          <div class="rail-foot">
+            <label><input type="checkbox" id="inactive"> Покажи и спрените маршрути</label>
+          </div>
+        </nav>
+        <section class="detail" id="detail" aria-live="polite"></section>
+      </div>`;
+    $("#search").addEventListener("input", (e) => { state.query = e.target.value; renderRail(); });
+    const chk = $("#inactive");
+    chk.checked = state.showInactive;
+    chk.addEventListener("change", () => { state.showInactive = chk.checked; renderRail(); });
+  }
+
+  function renderRail() {
+    const list = visibleRoutes();
+    const el = $("#groups");
+    if (!list.length) { el.innerHTML = `<p class="rail-foot">Няма маршрути${state.query ? " по това търсене" : ""}.</p>`; return; }
+    el.innerHTML = `<div class="group">${list.map((r) => {
+      const t = bestTrip(r);
+      let st = "няма комбинации", hit = false;
+      if (t) {
+        if (r.target_price == null) st = `${fmtDay(t.out.date)} → ${fmtDay(t.back.date)}`;
+        else if (t.total <= r.target_price) { st = `под целта с ${fmtEur0(r.target_price - t.total)} · ${fmtDay(t.out.date)}`; hit = true; }
+        else st = `още ${fmtEur0(t.total - r.target_price)} до целта · ${fmtDay(t.out.date)}`;
+      }
+      if (!r.active) st = "не се следи";
+      return `<button class="item" type="button" data-key="${esc(r.key)}" aria-current="${r.key === state.selected}">
+        <span class="nm">${esc(r.name)}</span>
+        <span class="pr">${t ? fmtEur0(t.total) : "—"}</span>
+        <span class="st${hit ? " hit" : ""}">${esc(st)}</span>
+      </button>`;
+    }).join("")}</div>`;
+    el.querySelectorAll(".item").forEach((b) => b.addEventListener("click", () => {
+      select(b.dataset.key);
+      if (matchMedia("(max-width: 900px)").matches) $("#detail").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    }));
+  }
+
+  // ------------------------------------------------------------------
+  //  Детайл на маршрут
+  // ------------------------------------------------------------------
+  function select(key, pushHash = true) {
+    const r = state.byKey.get(key);
+    if (!r) return;
+    state.selected = key;
+    state.selectedTrip = null;
+    if (pushHash) history.replaceState(null, "", `#${encodeURIComponent(key)}`);
+    document.querySelectorAll(".item").forEach((b) => b.setAttribute("aria-current", String(b.dataset.key === key)));
+    renderDetail(r);
+  }
+
+  function priceTag(r, t) {
+    if (!t) return "";
+    const [whole, cents] = num2.format(t.total).split(",");
+    const hit = r.target_price != null && t.total <= r.target_price;
+    let note = `${fmtDayY(t.out.date)} → ${fmtDayY(t.back.date)}, ${t.nights} нощ.`;
+    if (r.target_price != null) {
+      const gap = t.total - r.target_price;
+      note += gap <= 0 ? `<br>цел ${fmtEur0(r.target_price)}, <b>под нея с ${fmtEur0(-gap)}</b>` : `<br>цел ${fmtEur0(r.target_price)}, още <b>${fmtEur0(gap)}</b>`;
+    }
+    return `<div class="tag${hit ? " hit" : ""}">
+        <div class="amount" aria-label="${fmtEur(t.total)}"><span class="whole">${whole}</span><span class="cents">${cents}</span><span class="cur">€</span></div>
+        <div class="note">${note}</div>
+      </div>`;
+  }
+
+  function legCell(leg, names) {
+    const t = leg.dep ? ` ${leg.dep}` : "";
+    return `${fmtDay(leg.date)}${t}<br><span class="leg">${esc(names[leg.airline] || leg.airline)} · ${fmtEur(leg.price)}</span>`;
+  }
+
+  function renderDetail(r) {
+    const rd = r.rd, today = state.data.today, names = state.data.airline_names;
+    const trips = buildTrips(rd.out, rd.in, state.nights, state.pattern, today);
+    const allTotals = trips.map((t) => t.total);
+    const best = trips[0] || null;
+    const ins = r.insights || {};
+    const airlines = r.airlines.map((a) => names[a] || a).join(", ");
+    const asOf = rd.asOf ? `цени от ${fmtDayY(rd.asOf)}` : "още няма цени";
+    const stale = rd.asOf && rd.asOf < today ? ` <span class="up">(не са от днес)</span>` : "";
+
+    const bestAssess = best ? assess(r, rd, best, allTotals, today) : null;
+    const patternLabel = state.data.pattern_labels[state.pattern]?.label || state.pattern;
+
+    $("#detail").innerHTML = `
+      <div class="head">
+        <div>
+          <div class="cat">${esc(r.origin)} → ${esc(r.destination)} · ${esc(airlines)}${r.active ? "" : " · не се следи"}</div>
+          <h1 class="title">${esc(r.name)}</h1>
+          <div class="sub">${esc(patternLabel)}, ${state.nights.join("–")} нощувки · ${asOf}${stale}</div>
+        </div>
+        ${priceTag(r, best)}
+      </div>
+      ${bestAssess ? `
+        <div class="verdict">
+          <span class="chip ${bestAssess.verdict.code}">${esc(bestAssess.verdict.label)}</span>
+          <div class="why"><b>Най-добрата комбинация в момента.</b> След ${bestAssess.lead} дни.
+            ${bestAssess.verdict.reasons.length ? `<ul>${bestAssess.verdict.reasons.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+          </div>
+        </div>` : `<div class="no-data">Няма комбинации за избраните дни и нощувки. Пробвай „Всички дни“ или друг брой нощувки.</div>`}
+
+      ${trips.length ? `
+      <section class="block">
+        <h2>Най-добрите комбинации</h2>
+        <p class="lead">Най-евтиният полет за всеки ден в двете посоки (при всяка авиокомпания), събрани по ${state.nights.join("–")} нощувки. Натисни ред, за да видиш как се е движила цената за тези дати.</p>
+        <div class="card table-wrap"><table class="trips" id="trips">
+          <thead><tr><th>Отиване</th><th>Връщане</th><th class="num">Нощ.</th><th class="num">Общо</th><th class="num">Най-ниско досега</th><th class="num">За 7 дни</th><th>Оценка</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+      <section class="block" id="tripHistory"></section>
+      ` : ""}
+
+      <section class="block">
+        <h2>Кога е евтино да тръгна</h2>
+        <p class="lead">Най-евтината комбинация за всеки ден на тръгване през следващата година (${esc(patternLabel).toLowerCase()}, ${state.nights.join("–")} нощувки). Фонът показва кои месеци исторически са евтини (зелено) или скъпи (червено) по този маршрут.</p>
+        <div class="card"><div class="chart tall" id="chartDates" role="img" aria-label="Цена по дата на тръгване"></div></div>
+      </section>
+
+      <section class="block">
+        <h2>По месеци: сега и исторически</h2>
+        <p class="lead">Типичната най-ниска цена отиване + връщане за всеки месец от цялата история, до най-евтиното, което се предлага сега за същия месец.</p>
+        <div class="card">
+          <div class="legend"><span><i style="background:var(--orange)"></i>исторически (медиана на най-ниските цени)</span><span><i style="background:var(--blue)"></i>сега (най-евтината комбинация)</span></div>
+          <div class="chart" id="chartMonths" role="img" aria-label="Цена по месеци"></div>
+        </div>
+        <div class="seasons" id="seasons"></div>
+      </section>
+
+      <section class="block">
+        <h2>Ако купя сега, ще падне ли още?</h2>
+        <p class="lead">От историята на маршрута: за полети, следени до самото излитане – колко често цената е падала с поне 10 % <em>след</em> даден момент и с колко най-много. Отделно само за случаите, в които цената вече е била под обичайната – това е въпросът „вече е евтино, да чакам ли?“.</p>
+        <div class="card table-wrap" id="leadTable"></div>
+      </section>
+
+      <section class="block">
+        <h2>Цени по дати, в една посока</h2>
+        <p class="lead">Най-евтиният полет за всеки ден – отиване и връщане поотделно. Полезно за свободно избиране на дати.</p>
+        <div class="card">
+          <div class="legend"><span><i style="background:var(--blue)"></i>${esc(r.origin)} → ${esc(r.destination)}</span><span><i style="background:var(--orange)"></i>${esc(r.destination)} → ${esc(r.origin)}</span></div>
+          <div class="chart" id="chartOneWay" role="img" aria-label="Цени в една посока по дати"></div>
+        </div>
+        <div id="weekdays" style="margin-top:12px"></div>
+      </section>
+      <p class="note" style="margin-top:28px">Цени за 1 възрастен, само билет, в евро${state.data.fx?.as_of ? ` по курс на ЕЦБ от ${esc(state.data.fx.as_of)}` : ""}. История от ${esc(ins.first_scan || "—")}, ${ins.flights_tracked || 0} следени полета.</p>
+    `;
+
+    if (trips.length) renderTrips(r, rd, trips, allTotals, today);
+    drawDatesChart(r, trips, today);
+    drawMonthsChart(r, trips, today);
+    renderLead(r, bestAssess);
+    drawOneWayChart(r, today);
+    renderWeekdays(r);
+  }
+
+  function renderTrips(r, rd, trips, allTotals, today) {
+    const names = state.data.airline_names;
+    const tbody = $("#trips tbody");
+    const rows = trips.slice(0, 15).map((t, i) => {
+      const a = assess(r, rd, t, allTotals, today);
+      t.assess = a;
+      const ctx = a.ctx;
+      let hist = "—";
+      if (ctx.histMin != null && ctx.daysTracked >= 1) {
+        hist = t.total <= ctx.histMin + 0.01 ? `<span class="best">сега е най-ниско</span>` : `${fmtEur0(ctx.histMin)} <span class="leg">(${ctx.histMinOn.slice(5).split("-").reverse().join(".")})</span>`;
+      }
+      let ch = "—";
+      if (ctx.ago7 != null && ctx.ago7 !== t.total) {
+        const d = t.total - ctx.ago7;
+        ch = `<span class="${d < 0 ? "down" : "up"}">${d < 0 ? "▼" : "▲"} ${fmtEur0(Math.abs(d))}</span>`;
+      }
+      return `<tr class="row" data-i="${i}" aria-selected="${i === (state.selectedTrip ?? 0)}">
+        <td>${legCell(t.out, names)}</td><td>${legCell(t.back, names)}</td>
+        <td class="num">${t.nights}</td><td class="num total">${fmtEur(t.total)}</td>
+        <td class="num">${hist}</td><td class="num">${ch}</td>
+        <td><span class="chip ${a.verdict.code}" title="${esc(a.verdict.reasons.join("; "))}">${esc(a.verdict.label)}</span></td>
+      </tr>`;
+    });
+    tbody.innerHTML = rows.join("");
+    tbody.querySelectorAll("tr.row").forEach((tr) => tr.addEventListener("click", () => {
+      state.selectedTrip = Number(tr.dataset.i);
+      tbody.querySelectorAll("tr.row").forEach((x) => x.setAttribute("aria-selected", String(x === tr)));
+      drawTripHistory(r, trips[state.selectedTrip]);
+    }));
+    drawTripHistory(r, trips[state.selectedTrip ?? 0]);
+  }
+
+  // ------------------------------------------------------------------
+  //  Графики
+  // ------------------------------------------------------------------
+  function colors() {
+    return { ink: cssVar("--ink"), muted: cssVar("--muted"), line: cssVar("--line"), blue: cssVar("--blue"),
+             orange: cssVar("--orange"), good: cssVar("--good"), warn: cssVar("--warn"), surface: cssVar("--surface"),
+             goodSoft: cssVar("--good-soft"), warnSoft: cssVar("--warn-soft") };
+  }
+  function chartAt(id) {
+    const el = $(`#${id}`);
+    if (!el) return null;
+    state.charts[id]?.dispose();
+    const c = echarts.init(el, null, { renderer: "canvas" });
+    state.charts[id] = c;
+    return c;
+  }
+  function baseOption(C) {
+    return {
+      animation: !reduceMotion,
+      textStyle: { fontFamily: getComputedStyle(document.body).fontFamily },
+      grid: { left: 12, right: 18, top: 28, bottom: 36, containLabel: true },
+      tooltip: { trigger: "axis", backgroundColor: C.surface, borderColor: C.line, textStyle: { color: C.ink },
+                 axisPointer: { type: "line", lineStyle: { color: C.muted, type: "dashed" } } },
+    };
+  }
+  const timeLabel = (v) => { const d = new Date(v); if (d.getDate() === 1) return d.getMonth() === 0 ? String(d.getFullYear()) : MONTHS[d.getMonth()]; return String(d.getDate()); };
+  const timeAxis = (C) => ({ type: "time", axisLine: { lineStyle: { color: C.line } }, axisLabel: { color: C.muted, hideOverlap: true, formatter: timeLabel }, splitLine: { show: false } });
+  const yAxis = (C) => ({ type: "value", scale: true, min: 0, axisLabel: { color: C.muted, formatter: (v) => `${v} €` }, splitLine: { lineStyle: { color: C.line } } });
+  const targetLine = (C, target) => target == null ? undefined : {
+    silent: true, symbol: "none", lineStyle: { color: C.good, type: [6, 5], width: 1.5 },
+    label: { formatter: `цел ${Math.round(target)} €`, color: C.good, position: "insideEndTop", fontWeight: 600 },
+    data: [{ yAxis: target }],
+  };
+
+  function drawTripHistory(r, t) {
+    const sec = $("#tripHistory");
+    if (!sec || !t) return;
+    const names = state.data.airline_names;
+    const series = t.assess?.ctx.series || [];
+    sec.innerHTML = `
+      <h2>Цената за ${fmtDayY(t.out.date)} → ${fmtDayY(t.back.date)} във времето</h2>
+      <p class="lead">Общата цена отиване + връщане при всяка проверка. ${series.length > 1 ? `Следи се от ${fmtDayY(series[0][0])}.` : "Тези дати се следят отскоро – още няма история."}
+        ${t.assess ? `<br><span class="chip ${t.assess.verdict.code}">${esc(t.assess.verdict.label)}</span> ${esc(t.assess.verdict.reasons.join("; "))}` : ""}</p>
+      <div class="card"><div class="chart" id="chartTrip" role="img" aria-label="История на цената за избраните дати"></div></div>`;
+    const C = colors();
+    const chart = chartAt("chartTrip");
+    const today = state.data.today;
+    const data = series.map(([d, v]) => [parseDay(d).getTime(), v]);
+    if (data.length && series[series.length - 1][0] < today) data.push([parseDay(today).getTime(), t.total]);
+    chart.setOption({
+      ...baseOption(C),
+      tooltip: { ...baseOption(C).tooltip, formatter: (ps) => { const p = ps[0]; return `${fmtDayY(isoDay(new Date(p.value[0])))}<br><b>${fmtEur(p.value[1])}</b>`; } },
+      xAxis: timeAxis(C),
+      yAxis: yAxis(C),
+      series: [{ name: "Общо", type: "line", step: "end", data, showSymbol: data.length <= 40, symbol: "circle", symbolSize: 7,
+                 lineStyle: { width: 2, color: C.blue }, itemStyle: { color: C.blue },
+                 markLine: targetLine(C, r.target_price) }],
+    });
+  }
+
+  function drawDatesChart(r, trips, today) {
+    const C = colors();
+    const chart = chartAt("chartDates");
+    if (!chart) return;
+    // най-евтината комбинация за всеки ден на тръгване
+    const byDay = new Map();
+    for (const t of trips) if (!byDay.has(t.out.date) || t.total < byDay.get(t.out.date).total) byDay.set(t.out.date, t);
+    const pts = [...byDay.values()].sort((a, b) => (a.out.date < b.out.date ? -1 : 1))
+      .map((t) => ({ value: [parseDay(t.out.date).getTime(), t.total], t }));
+    const season = r.insights?.season || {};
+    const areas = [];
+    const start = parseDay(today);
+    for (let i = 0; i < 13; i++) {
+      const m = new Date(start.getFullYear(), start.getMonth() + i, 1);
+      const mm = String(m.getMonth() + 1).padStart(2, "0");
+      const label = season[mm];
+      if (!label || label === "normal") continue;
+      const end = new Date(m.getFullYear(), m.getMonth() + 1, 1);
+      areas.push([{ xAxis: m.getTime(), itemStyle: { color: label === "cheap" ? C.goodSoft : C.warnSoft } }, { xAxis: end.getTime() }]);
+    }
+    if (!pts.length) { chart.setOption({ title: { text: "Няма комбинации", left: "center", top: "middle", textStyle: { color: C.muted, fontSize: 14, fontWeight: 400 } } }); return; }
+    chart.setOption({
+      ...baseOption(C),
+      tooltip: { ...baseOption(C).tooltip, formatter: (ps) => {
+        const d = ps.find((p) => p.data?.t)?.data; if (!d) return "";
+        const t = d.t, names = state.data.airline_names;
+        return `<b>${fmtEur(t.total)}</b> · ${t.nights} нощ.<br>${fmtDay(t.out.date)} ${t.out.dep || ""} ${names[t.out.airline] || ""} ${fmtEur(t.out.price)}<br>${fmtDay(t.back.date)} ${t.back.dep || ""} ${names[t.back.airline] || ""} ${fmtEur(t.back.price)}`;
+      } },
+      xAxis: timeAxis(C),
+      yAxis: yAxis(C),
+      series: [{ name: "Общо", type: "line", data: pts, showSymbol: true, symbol: "circle", symbolSize: 6,
+                 lineStyle: { width: 1.5, color: C.blue, opacity: .7 }, itemStyle: { color: C.blue },
+                 markLine: targetLine(C, r.target_price),
+                 markArea: areas.length ? { silent: true, data: areas } : undefined }],
+    });
+  }
+
+  function drawMonthsChart(r, trips, today) {
+    const C = colors();
+    const chart = chartAt("chartMonths");
+    if (!chart) return;
+    const months = r.insights?.months || [];
+    // исторически: по месец от годината (медиана през годините)
+    const hist = Array.from({ length: 12 }, () => []);
+    for (const m of months) hist[Number(m.month.slice(5, 7)) - 1].push(m.total);
+    const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+    // сега: най-евтината комбинация по месец (следващите 12 месеца)
+    const now = Array(12).fill(null);
+    for (const t of trips) { const i = Number(t.out.date.slice(5, 7)) - 1; if (now[i] == null || t.total < now[i]) now[i] = t.total; }
+    const start = parseDay(today).getMonth();
+    const order = Array.from({ length: 12 }, (_, i) => (start + i) % 12);
+    chart.setOption({
+      ...baseOption(C),
+      tooltip: { ...baseOption(C).tooltip, axisPointer: { type: "shadow" }, formatter: (ps) => `${ps[0].axisValue}<br>` + ps.map((p) => `${p.marker}${p.seriesName}: <b>${p.value == null ? "—" : fmtEur0(p.value)}</b>`).join("<br>") },
+      xAxis: { type: "category", data: order.map((i) => MONTHS[i]), axisLine: { lineStyle: { color: C.line } }, axisLabel: { color: C.muted }, axisTick: { show: false } },
+      yAxis: yAxis(C),
+      series: [
+        { name: "исторически", type: "bar", data: order.map((i) => median(hist[i])), itemStyle: { color: C.orange, borderRadius: [4, 4, 0, 0] }, barGap: "10%", barCategoryGap: "35%" },
+        { name: "сега", type: "bar", data: order.map((i) => now[i]), itemStyle: { color: C.blue, borderRadius: [4, 4, 0, 0] } },
+      ],
+    });
+    const season = r.insights?.season || {};
+    const label = { cheap: "евтино", expensive: "скъпо", normal: "" };
+    $("#seasons").innerHTML = order.map((i) => {
+      const s = season[String(i + 1).padStart(2, "0")] || "";
+      return `<div class="season ${s}" title="${MONTHS[i]}">${MONTHS[i]}${label[s] ? `<br>${label[s]}` : ""}</div>`;
+    }).join("");
+  }
+
+  function renderLead(r, bestAssess) {
+    const el = $("#leadTable");
+    const rows = r.insights?.lead_time?.out || [];
+    if (!rows.length) { el.innerHTML = `<div class="no-data">Още няма достатъчно история – статистиката се появява, когато следени полети вече са излетели.</div>`; return; }
+    const lead = bestAssess?.lead;
+    el.innerHTML = `<table class="lead">
+      <thead><tr><th>Дни преди полета</th><th>Случаи</th><th>Падна още ≥10 %</th><th>Типично с</th><th>Поскъпна накрая</th><th>Ако вече е евтино: падна още</th><th>Типично с</th></tr></thead>
+      <tbody>${rows.map((b) => {
+        const now = lead != null && b.lo <= lead && lead <= b.hi;
+        const c = b.cheap;
+        return `<tr class="${now ? "now" : ""}"><td>${b.lo}–${b.hi}${now ? " ← избраното" : ""}</td><td>${b.n}</td><td>${pct(b.p_drop10)}</td><td>${pct(b.median_drop)}</td><td>${pct(b.p_rise10)}</td><td>${c ? `${pct(c.p_drop10)} <span class="leg">(${c.n})</span>` : "—"}</td><td>${c ? pct(c.median_drop) : "—"}</td></tr>`;
+      }).join("")}</tbody></table>`;
+  }
+
+  function drawOneWayChart(r, today) {
+    const C = colors();
+    const chart = chartAt("chartOneWay");
+    if (!chart) return;
+    const names = state.data.airline_names;
+    const mk = (dir) => Object.values(r.rd[dir]).filter((x) => x.price != null && x.date >= today)
+      .sort((a, b) => (a.date < b.date ? -1 : 1)).map((x) => ({ value: [parseDay(x.date).getTime(), x.price], x }));
+    const out = mk("out"), inn = mk("in");
+    if (!out.length && !inn.length) { chart.setOption({ title: { text: "Още няма цени", left: "center", top: "middle", textStyle: { color: C.muted, fontSize: 14, fontWeight: 400 } } }); return; }
+    chart.setOption({
+      ...baseOption(C),
+      tooltip: { ...baseOption(C).tooltip, formatter: (ps) => `${fmtDayY(isoDay(new Date(ps[0].value[0])))}<br>` +
+        ps.map((p) => `${p.marker}${p.seriesName}: <b>${fmtEur(p.value[1])}</b> ${p.data.x.dep || ""} ${names[p.data.x.airline] || ""}`).join("<br>") },
+      xAxis: timeAxis(C),
+      yAxis: yAxis(C),
+      dataZoom: [{ type: "inside", filterMode: "none" }],
+      series: [
+        { name: `${r.origin} → ${r.destination}`, type: "line", data: out, showSymbol: true, symbolSize: 4, lineStyle: { width: 1.5, color: C.blue }, itemStyle: { color: C.blue } },
+        { name: `${r.destination} → ${r.origin}`, type: "line", data: inn, showSymbol: true, symbolSize: 4, lineStyle: { width: 1.5, color: C.orange }, itemStyle: { color: C.orange } },
+      ],
+    });
+  }
+
+  function renderWeekdays(r) {
+    const el = $("#weekdays");
+    const w = r.insights?.weekdays;
+    if (!w || !w.out?.some((x) => x != null)) { el.innerHTML = ""; return; }
+    const block = (title, arr) => {
+      const vals = arr.filter((x) => x != null);
+      const lo = Math.min(...vals);
+      return `<div style="margin-top:8px"><span class="note">${title}:</span> <span class="wd">${arr.map((v, i) => `<span class="${v != null && v <= lo * 1.05 ? "lo" : ""}">${WD[i]} ${v == null ? "—" : fmtEur0(v)}</span>`).join("")}</span></div>`;
+    };
+    el.innerHTML = `<p class="note">Типична най-ниска цена по ден от седмицата на полета (от цялата история):</p>${block("отиване", w.out)}${block("връщане", w.in)}`;
+  }
+
+  addEventListener("resize", () => Object.values(state.charts).forEach((c) => c.resize()));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (state.selected) renderDetail(state.byKey.get(state.selected)); });
+  addEventListener("hashchange", () => {
+    const key = decodeURIComponent(location.hash.slice(1));
+    if (key && key !== state.selected && state.byKey.has(key)) select(key, false);
+  });
+
+  function showError(msg) {
+    $("#app").innerHTML = `<div class="empty"><h1>Страницата не може да се зареди</h1><p>${esc(msg)}</p></div>`;
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

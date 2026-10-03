@@ -1,0 +1,71 @@
+name: Проверка на полети
+
+on:
+  schedule:
+    - cron: "40 4 * * *"      # 07:40 лятно / 06:40 зимно българско време
+  workflow_dispatch:           # ръчно пускане от таба Actions
+  push:
+    branches: [main]
+    paths: [flights.yaml]      # добавиш ли маршрут – проверява веднага
+
+concurrency:
+  group: scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    # По подразбиране върви в облака на GitHub. Ако някой от сайтовете блокира
+    # адресите на GitHub, създай променлива RUNNER = self-hosted
+    # (Settings → Secrets and variables → Actions → Variables) и
+    # проверката ще върви от твоя компютър. Виж README.
+    runs-on: ${{ vars.RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Инсталиране
+        run: uv sync --frozen --no-dev
+
+      - name: Внос на старата история (само ако базата липсва)
+        if: ${{ hashFiles('data/flights.db') == '' && hashFiles('data/legacy/*.csv') != '' }}
+        run: uv run python scripts/import_legacy_csv.py
+
+      - name: Проверка на цените
+        run: uv run python -m scanner --no-export
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DASHBOARD_URL: ${{ vars.DASHBOARD_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+
+      - name: Запис на базата
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/flights.db
+          if git diff --cached --quiet; then
+            echo "Няма промени в базата."
+            exit 0
+          fi
+          git commit -m "Цени: $(TZ=Europe/Sofia date +'%Y-%m-%d %H:%M')"
+          git pull --rebase
+          git push
+
+  # Push от GITHUB_TOKEN не стартира други workflow-и, затова сайтът
+  # се публикува директно оттук.
+  pages:
+    needs: scan
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-pages.yml

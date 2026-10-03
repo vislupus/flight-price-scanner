@@ -1,0 +1,27 @@
+{
+  "outbound": {
+    "fares": [
+      {"day": "2026-11-01", "arrivalDate": null, "departureDate": null, "price": null, "soldOut": false, "unavailable": true},
+      {"day": "2026-11-05", "arrivalDate": "2026-11-05T09:10:00", "departureDate": "2026-11-05T06:40:00",
+       "price": {"value": 37.99, "valueMainUnit": "37", "valueFractionalUnit": "99", "currencyCode": "EUR", "currencySymbol": "€"},
+       "soldOut": false, "unavailable": false},
+      {"day": "2026-11-06", "arrivalDate": "2026-11-06T21:30:00", "departureDate": "2026-11-06T19:00:00",
+       "price": {"value": 29.99, "valueMainUnit": "29", "valueFractionalUnit": "99", "currencyCode": "EUR", "currencySymbol": "€"},
+       "soldOut": false, "unavailable": false},
+      {"day": "2026-11-08", "arrivalDate": "2026-11-08T09:10:00", "departureDate": "2026-11-08T06:40:00",
+       "price": null, "soldOut": true, "unavailable": false}
+    ],
+    "minFare": null, "maxFare": null
+  },
+  "inbound": {
+    "fares": [
+      {"day": "2026-11-09", "arrivalDate": "2026-11-09T15:00:00", "departureDate": "2026-11-09T10:30:00",
+       "price": {"value": 24.99, "valueMainUnit": "24", "valueFractionalUnit": "99", "currencyCode": "EUR", "currencySymbol": "€"},
+       "soldOut": false, "unavailable": false},
+      {"day": "2026-11-10", "arrivalDate": "2026-11-10T15:00:00", "departureDate": "2026-11-10T10:30:00",
+       "price": {"value": 44.99, "valueMainUnit": "44", "valueFractionalUnit": "99", "currencyCode": "EUR", "currencySymbol": "€"},
+       "soldOut": false, "unavailable": false}
+    ],
+    "minFare": null, "maxFare": null
+  }
+}

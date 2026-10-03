@@ -1,0 +1,33 @@
+name: Проверка на API-тата
+
+# Пуска се само ръчно: Actions → Проверка на API-тата → Run workflow.
+# Върви винаги в облака на GitHub, за да покаже дали Ryanair и Wizz Air
+# отговарят на заявки от адресите на GitHub.
+
+on:
+  workflow_dispatch:
+    inputs:
+      route:
+        description: "Маршрут, напр. SOF BCN (празно = SOF BCN за Ryanair, SOF LTN за Wizz Air)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Инсталиране
+        run: uv sync --frozen --no-dev
+
+      - name: Проверка
+        env:
+          ROUTE: ${{ inputs.route }}
+        run: uv run python scripts/probe_apis.py $ROUTE
