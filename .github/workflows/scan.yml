@@ -35,7 +35,7 @@ jobs:
 
       - name: Внос на старата история (само ако базата липсва)
         if: ${{ hashFiles('data/flights.db') == '' && hashFiles('data/legacy/*.csv') != '' }}
-        run: uv run python scripts/import_legacy_csv.py
+        run: uv run python scripts/import_legacy.py
 
       - name: Проверка на цените
         run: uv run python -m scanner --no-export

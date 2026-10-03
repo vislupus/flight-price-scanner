@@ -334,16 +334,17 @@ class Database:
         )
 
     def insert_intervals(self, airline: str, origin: str, destination: str,
-                         rows: list[tuple[str, str, str, float, str, float]], legacy: bool = True) -> int:
-        """Масов внос: rows = [(flight_date, first_seen, last_seen, price, currency, price_eur)].
-        Вече съществуващите (същ полет и first_seen) се прескачат."""
+                         rows: list[tuple], legacy: bool = True) -> int:
+        """Масов внос: rows = [(flight_date, first_seen, last_seen, price, currency, price_eur
+        [, dep_time, arr_time])]. Вече съществуващите (същ полет и first_seen) се прескачат."""
         leg = self.leg_id(airline, origin, destination)
         cur = self.conn.executemany(
             """INSERT OR IGNORE INTO fares(leg, flight_day, first_seen, last_seen, price, currency,
-                                           price_eur, legacy)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            [(leg, day_num(fd), day_num(f), day_num(l), _cents(p), c, _cents(pe), int(legacy))
-             for fd, f, l, p, c, pe in rows],
+                                           price_eur, dep_min, arr_min, legacy)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            [(leg, day_num(r[0]), day_num(r[1]), day_num(r[2]), _cents(r[3]), r[4], _cents(r[5]),
+              _minutes(r[6]) if len(r) > 6 else None, _minutes(r[7]) if len(r) > 7 else None, int(legacy))
+             for r in rows],
         )
         self.conn.commit()
         return cur.rowcount

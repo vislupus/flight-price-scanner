@@ -86,3 +86,17 @@ routes:
   - to: CRL
     name: Брюксел (Charleroi)
     target_price: 60
+
+  # Маршрути само с история от стария скрипт – не се проверяват.
+  # Смени на active: true (или махни реда), ако искаш да се следят отново.
+  - to: BUD
+    name: Будапеща
+    active: false
+
+  - to: VIE
+    name: Виена
+    active: false
+
+  - to: BTS
+    name: Братислава
+    active: false
