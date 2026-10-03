@@ -38,54 +38,129 @@ settings:
 routes:
   - to: BCN
     name: Барселона
-    target_price: 40
+    target_price: 20
 
   - to: STN
     name: Лондон (Stansted)
-    target_price: 30
+    target_price: 20
     airlines: [ryanair]
 
   - to: LTN
     name: Лондон (Luton)
-    target_price: 30
+    target_price: 20
     airlines: [wizzair]
 
   - to: DUB
     name: Дъблин
-    target_price: 40
+    target_price: 20
 
   - to: BVA
     name: Париж (Beauvais)
-    target_price: 40
-    airlines: [ryanair]
+    target_price: 20
+
+  - to: NCE
+    name: Ница
+    target_price: 20
 
   - to: AGP
     name: Малага
-    target_price: 30
+    target_price: 20
 
   - to: PFO
     name: Пафос
-    target_price: 30
+    target_price: 20
+
+  - to: LCA
+    name: Ларнака
+    target_price: 20
 
   - to: WRO
     name: Вроцлав
-    target_price: 30
+    target_price: 20
 
   - to: CPH
     name: Копенхаген
-    target_price: 30
+    target_price: 20
 
   - to: NAP
     name: Неапол
-    target_price: 30
+    target_price: 20
 
   - to: EIN
     name: Айндховен
-    target_price: 30
+    target_price: 20
 
   - to: CRL
     name: Брюксел (Charleroi)
-    target_price: 30
+    target_price: 20
+
+  - to: MLA
+    name: Малта
+    target_price: 20
+
+  - to: RHO
+    name: Родос
+    target_price: 20
+
+  - to: CFU
+    name: Корфу
+    target_price: 20
+
+  - to: BER
+    name: Берлин
+    target_price: 20
+
+  - to: BLQ
+    name: Болоня
+    target_price: 20
+
+  - to: CIA
+    name: Рим Чампино
+    target_price: 20
+
+  - to: FCO
+    name: Рим Фиумичино
+    target_price: 20
+
+  - to: AMM
+    name: Аман
+    target_price: 20
+
+  - to: VLC
+    name: Валенсия
+    target_price: 20
+
+  - to: EDI
+    name: Единбург
+    target_price: 20
+
+  - to: BGY
+    name: Милано Бергамо
+    target_price: 20
+
+  - to: PSA
+    name: Пиза
+    target_price: 20
+
+  - to: TIA
+    name: Тирана
+    target_price: 20
+
+  - to: TLV
+    name: Тел Авив
+    target_price: 20
+
+  - to: AHO
+    name: Алгеро (Сардиния)
+    target_price: 20
+
+  - to: PMO
+    name: Палермо (Сицилия)
+    target_price: 20
+
+  - to: PRG
+    name: Прага
+    target_price: 20
 
   # Маршрути само с история от стария скрипт – не се проверяват.
   # Смени на active: true (или махни реда), ако искаш да се следят отново.
