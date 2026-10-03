@@ -24,6 +24,7 @@ def test_wizzair_parser(rates):
     out = parse_flights(data["outboundFlights"], rates)
     assert out["2026-11-05"].price == 39.99 and out["2026-11-05"].dep_time == "18:45"
     assert out["2026-11-06"].price is None
+    assert out["2026-11-07"].price is None            # amount: 0 = разпродаден, не цена 0
     inb = parse_flights(data["returnFlights"], rates)
     assert inb["2026-11-09"].currency == "GBP"
     assert inb["2026-11-09"].price_eur == round(34.99 / 0.8, 2)

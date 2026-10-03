@@ -5,7 +5,9 @@
      "departureDates": [{"date": "2026-11-05T06:30:00", "isCheapestOfTheDay": false},
                         {"date": "2026-11-05T18:45:00", "isCheapestOfTheDay": true}]},
     {"departureStation": "SOF", "arrivalStation": "LTN", "departureDate": "2026-11-06T00:00:00",
-     "price": null, "priceType": "soldOut", "departureDates": [{"date": "2026-11-06T06:30:00"}]}
+     "price": null, "priceType": "soldOut", "departureDates": [{"date": "2026-11-06T06:30:00"}]},
+    {"departureStation": "SOF", "arrivalStation": "LTN", "departureDate": "2026-11-07T00:00:00",
+     "price": {"amount": 0, "currencyCode": "EUR"}, "priceType": "soldOut", "departureDates": [{"date": "2026-11-07T06:30:00"}]}
   ],
   "returnFlights": [
     {"departureStation": "LTN", "arrivalStation": "SOF", "departureDate": "2026-11-09T00:00:00",

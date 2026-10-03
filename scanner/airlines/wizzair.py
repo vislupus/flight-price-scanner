@@ -59,7 +59,8 @@ def parse_flights(items: list | None, rates) -> dict[str, Fare]:
             continue
         price = item.get("price") or {}
         amount = price.get("amount")
-        if amount is None:
+        # Разпродадените дни идват с amount: 0 (priceType "soldOut"/"checkPrice") – това не е цена
+        if amount is None or float(amount) <= 0 or item.get("priceType") in ("soldOut", "checkPrice", "noData"):
             out[day] = Fare(price=None)
             continue
         currency = price.get("currencyCode")

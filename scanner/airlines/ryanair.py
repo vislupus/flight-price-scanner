@@ -43,7 +43,7 @@ def parse_day_fares(block: dict | None, rates) -> dict[str, Fare]:
         value = price.get("value")
         if item.get("unavailable") and value is None:
             continue   # няма полет този ден
-        if value is None:
+        if value is None or float(value) <= 0:
             out[day] = Fare(price=None)   # разпродаден или без цена
             continue
         currency = price.get("currencyCode")
