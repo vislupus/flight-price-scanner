@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ── проектни ─────────────────────────────────────────────
+*.db-journal
+*.db-wal
+*.db-shm
+_site/
+debug/
+docs/data/

@@ -1,0 +1,3 @@
+*.db binary
+*.sqlite binary
+* text=auto eol=lf
