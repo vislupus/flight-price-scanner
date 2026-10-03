@@ -53,6 +53,7 @@ routes:
   - to: DUB
     name: Дъблин
     target_price: 20
+    airlines: [ryanair]
 
   - to: BVA
     name: Париж (Beauvais)
@@ -61,6 +62,7 @@ routes:
   - to: NCE
     name: Ница
     target_price: 20
+    airlines: [wizzair]
 
   - to: AGP
     name: Малага
@@ -69,18 +71,22 @@ routes:
   - to: PFO
     name: Пафос
     target_price: 20
+    airlines: [ryanair]
 
   - to: LCA
     name: Ларнака
     target_price: 20
+    airlines: [wizzair]
 
   - to: WRO
     name: Вроцлав
     target_price: 20
+    airlines: [ryanair]
 
   - to: CPH
     name: Копенхаген
     target_price: 20
+    airlines: [ryanair]
 
   - to: NAP
     name: Неапол
@@ -97,6 +103,7 @@ routes:
   - to: MLA
     name: Малта
     target_price: 20
+    airlines: [ryanair]
 
   - to: RHO
     name: Родос
@@ -113,6 +120,7 @@ routes:
   - to: BLQ
     name: Болоня
     target_price: 20
+    airlines: [ryanair]
 
   - to: CIA
     name: Рим Чампино
@@ -122,10 +130,6 @@ routes:
     name: Рим Фиумичино
     target_price: 20
 
-  - to: AMM
-    name: Аман
-    target_price: 20
-
   - to: VLC
     name: Валенсия
     target_price: 20
@@ -133,6 +137,7 @@ routes:
   - to: EDI
     name: Единбург
     target_price: 20
+    airlines: [ryanair]
 
   - to: BGY
     name: Милано Бергамо
@@ -141,18 +146,22 @@ routes:
   - to: PSA
     name: Пиза
     target_price: 20
+    airlines: [ryanair]
 
   - to: TIA
     name: Тирана
     target_price: 20
+    airlines: [wizzair]
 
   - to: TLV
     name: Тел Авив
     target_price: 20
+    airlines: [wizzair]
 
   - to: AHO
     name: Алгеро (Сардиния)
     target_price: 20
+    airlines: [wizzair]
 
   - to: PMO
     name: Палермо (Сицилия)
@@ -161,6 +170,7 @@ routes:
   - to: PRG
     name: Прага
     target_price: 20
+    airlines: [wizzair]
 
   # Маршрути само с история от стария скрипт – не се проверяват.
   # Смени на active: true (или махни реда), ако искаш да се следят отново.
